@@ -1,6 +1,7 @@
 import { Color } from "./types";
 import ffmpeg from 'fluent-ffmpeg';
 import { OUTPUT_PATH } from "./utils";
+import { IResolution } from "./IResolution";
 
 export class Clip {
     private outputName: string;
@@ -11,9 +12,10 @@ export class Clip {
 
     // todo: убрать
     private lineLimit = 30;
-    private width = 606;
-    private height = 1080;
-    private aspect = 1;
+    private border: number = 0;
+    private fontSize: number = 0;
+    private spaceBetween: number = 0;
+    private topPadding: number = 0;
 
     constructor(
         outputName: string,
@@ -30,6 +32,9 @@ export class Clip {
     }
 
     private getTextLines(text: string, lineLimit: number) {
+        if (!text.trim()) {
+            return [];
+        }
         const words = text.split(' ');
         let result: string[] = [];
         let line = '';
@@ -56,22 +61,58 @@ export class Clip {
         return {
             filter: 'drawtext',
             options: {
-                fontfile:'font.ttf',
+                fontfile:'open-sans.ttf',
                 box: 1,
-                boxborderw: 15, // todo: autocalc
+                boxborderw: this.border,
                 boxcolor: this.textBackgroundColor,
                 text: this.escapeSymbols(line),
-                fontsize: 28, // todo: autocalc
+                fontsize: this.fontSize,
                 fontcolor: 'white',
                 x: '(main_w/2-text_w/2)',
-                y: 30 + i * 60, // todo: autocalc
+                y: this.topPadding + i * this.spaceBetween,
                 shadowcolor: 'black'
             }
         }
     }
 
-    createClip(videoPath: string): void {    
+    private getVideoResolution(videoPath: string): Promise<IResolution> {
+        return new Promise((resolve, reject) => { 
+            ffmpeg.ffprobe(videoPath, (err, metadata) => {
+                resolve({
+                    width: (metadata.streams[0].width ?? 0),
+                    height: (metadata.streams[0].height ?? 0)
+                });
+            })
+        });
+    }
+
+    private calcTextHeight(width: number, textLines: string[]): number {
+        const usableWidth = Math.ceil(0.8 * width);
+        this.fontSize = Math.ceil(usableWidth * 1.5 / this.lineLimit);
+        this.border = Math.ceil(this.fontSize / 2);
+        this.topPadding = this.fontSize + this.border * 2;
+        this.spaceBetween = this.fontSize + this.border * 1.5;
+        return textLines.length > 0
+            ? this.topPadding * 2 + textLines.length * this.spaceBetween - this.fontSize
+            : 0;
+    }
+
+    private calcScale(width: number, height: number): number {
+        if (width < height) {
+            return width < 600 ? Math.ceil(600 / width) : 1;
+        } else {
+            return height < 600 ? Math.ceil(600 / height) : 1;
+        }
+    }
+
+    async createClip(videoPath: string): Promise<void> {    
         const textLines = this.getTextLines(this.text, this.lineLimit);
+
+        let { width, height } = await this.getVideoResolution(videoPath);
+        const scale = this.calcScale(width, height);
+        const textHeight = this.calcTextHeight(width * scale, textLines);
+        width = width * scale;
+        height = height * scale + textHeight;
 
         ffmpeg(videoPath)
             .setStartTime(this.startTime)
@@ -80,25 +121,21 @@ export class Clip {
                 {
                     filter: 'scale',
                     options: {
-                        // todo: вынести в отдельный метод 
-                        w: 'if(gt(a,' + this.aspect + '),' + this.width + ',trunc(' + this.height + '*a/2)*2)',
-                        h: 'if(lt(a,' + this.aspect + '),' + this.height + ',trunc(' + this.width + '/a/2)*2)'
+                        w: width,
+                        h: height,
+                        force_original_aspect_ratio: 'disable'
                     }
                 },
                 {
                     filter: 'pad',
                     options: {
-                        // todo: сделать автоподбор
-                        w: this.width,
-                        h: this.height,
-                        // todo: вынести в отдельный метод 
-                        x: 'if(gt(a,' + this.aspect + '),0,(' + this.width + '-iw)/2)',
-                        y: 'if(lt(a,' + this.aspect + '),0,(' + this.height + '-ih)/2)',
+                        w: width,
+                        h: height + textHeight,
+                        x: 0,
+                        y: textHeight,
                         color: 'black'
                     }
-                }
-            ])
-            .videoFilters([
+                },
                 ...textLines.map((line, i) => 
                     this.getTextLineFilter(line, i)
                 )
