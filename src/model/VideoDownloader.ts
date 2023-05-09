@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import ytdl from 'ytdl-core';
-import { OUTPUT_PATH, DOWNLOADED_PATH } from './utils';
+import { OUTPUT_PATH, DOWNLOADED_PATH } from '../constants';
 
 export class VideoDownloader {
     static download(

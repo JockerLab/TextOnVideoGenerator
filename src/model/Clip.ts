@@ -1,7 +1,7 @@
-import { Color } from "./types";
+import { Color } from "../types";
 import ffmpeg from 'fluent-ffmpeg';
-import { OUTPUT_PATH } from "./utils";
-import { IResolution } from "./IResolution";
+import { OUTPUT_PATH } from "../constants";
+import { IResolution } from "../interface/IResolution";
 
 export class Clip {
     private outputName: string;
@@ -9,8 +9,6 @@ export class Clip {
     private duration: number;
     private textBackgroundColor: Color;
     private text: string;
-
-    // todo: убрать
     private lineLimit = 30;
     private border: number = 0;
     private fontSize: number = 0;
@@ -31,59 +29,12 @@ export class Clip {
         this.text = text;
     }
 
-    private getTextLines(text: string, lineLimit: number) {
-        if (!text.trim()) {
-            return [];
+    private calcScale(width: number, height: number): number {
+        if (width < height) {
+            return width < 600 ? Math.ceil(600 / width) : 1;
+        } else {
+            return height < 600 ? Math.ceil(600 / height) : 1;
         }
-        const words = text.split(' ');
-        let result: string[] = [];
-        let line = '';
-
-        for (const word of words) {
-            if (line.length + word.length > lineLimit) {
-                result.push(line);
-                line = '';
-            }
-            line += word + ' ';
-        }
-        if (line) {
-            result.push(line);
-        }
-
-        return result;
-    }
-
-    private escapeSymbols(line: string): string {
-        return line.replace(/([;:])/g, '\\\\\\$1');
-    }
-
-    private getTextLineFilter(line: string, i: number): any {
-        return {
-            filter: 'drawtext',
-            options: {
-                fontfile:'open-sans.ttf',
-                box: 1,
-                boxborderw: this.border,
-                boxcolor: this.textBackgroundColor,
-                text: this.escapeSymbols(line),
-                fontsize: this.fontSize,
-                fontcolor: 'white',
-                x: '(main_w/2-text_w/2)',
-                y: this.topPadding + i * this.spaceBetween,
-                shadowcolor: 'black'
-            }
-        }
-    }
-
-    private getVideoResolution(videoPath: string): Promise<IResolution> {
-        return new Promise((resolve, reject) => { 
-            ffmpeg.ffprobe(videoPath, (err, metadata) => {
-                resolve({
-                    width: (metadata.streams[0].width ?? 0),
-                    height: (metadata.streams[0].height ?? 0)
-                });
-            })
-        });
     }
 
     private calcTextHeight(width: number, textLines: string[]): number {
@@ -97,15 +48,7 @@ export class Clip {
             : 0;
     }
 
-    private calcScale(width: number, height: number): number {
-        if (width < height) {
-            return width < 600 ? Math.ceil(600 / width) : 1;
-        } else {
-            return height < 600 ? Math.ceil(600 / height) : 1;
-        }
-    }
-
-    async createClip(videoPath: string): Promise<void> {    
+    async createClip(videoPath: string, onCreate: (videoPath: string) => void): Promise<void> {    
         const textLines = this.getTextLines(this.text, this.lineLimit);
 
         let { width, height } = await this.getVideoResolution(videoPath);
@@ -141,8 +84,64 @@ export class Clip {
                 )
             ])
             .on('end', () => {
+                onCreate(OUTPUT_PATH + this.outputName);
                 console.log(`Video ${this.outputName} created!`);
             })
             .save(OUTPUT_PATH + this.outputName);
+    }
+
+    private escapeSymbols(line: string): string {
+        return line.replace(/([;:])/g, '\\\\\\$1');
+    }
+
+    private getTextLineFilter(line: string, i: number): any {
+        return {
+            filter: 'drawtext',
+            options: {
+                fontfile:'open-sans.ttf',
+                box: 1,
+                boxborderw: this.border,
+                boxcolor: this.textBackgroundColor,
+                text: this.escapeSymbols(line),
+                fontsize: this.fontSize,
+                fontcolor: 'white',
+                x: '(main_w/2-text_w/2)',
+                y: this.topPadding + i * this.spaceBetween,
+                shadowcolor: 'black'
+            }
+        }
+    }
+
+    private getTextLines(text: string, lineLimit: number) {
+        if (!text.trim()) {
+            return [];
+        }
+        const words = text.split(' ');
+        let result: string[] = [];
+        let line = '';
+
+        for (const word of words) {
+            if (line.length + word.length > lineLimit) {
+                result.push(line);
+                line = '';
+            }
+            line += word + ' ';
+        }
+        if (line) {
+            result.push(line);
+        }
+
+        return result;
+    }
+
+    private getVideoResolution(videoPath: string): Promise<IResolution> {
+        return new Promise((resolve, reject) => { 
+            ffmpeg.ffprobe(videoPath, (err, metadata) => {
+                resolve({
+                    width: (metadata.streams[0].width ?? 0),
+                    height: (metadata.streams[0].height ?? 0)
+                });
+            })
+        });
     }
 }
