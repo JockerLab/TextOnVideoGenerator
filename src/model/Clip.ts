@@ -66,7 +66,7 @@ export class Clip {
                     options: {
                         w: width,
                         h: height,
-                        force_original_aspect_ratio: 'disable'
+                        force_original_aspect_ratio: 'disable' // todo: попробовать без этого
                     }
                 },
                 {
