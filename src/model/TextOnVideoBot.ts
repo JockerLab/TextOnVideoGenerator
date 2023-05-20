@@ -11,7 +11,12 @@ import axios from 'axios';
 
 export class TextOnVideoBot extends TelegramBot {
     constructor(private config: DotenvParseOutput) {
-        super(config['BOT_TOKEN'], { polling: true });
+        super(config['BOT_TOKEN'], { 
+            webHook: {
+                host: config['HOST'],
+                port: +config['PORT']
+            }
+         });
 
         this.onText(
             /\/create_video (\S+) (\d+) (\d+) (".+")/,

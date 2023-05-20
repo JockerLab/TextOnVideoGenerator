@@ -7,11 +7,16 @@ import { config } from 'dotenv';
 // todo: скачивать видео не длиннее X секунд.
 // todo: COPY .env в Dockerfile убрать
 
-const { error, parsed } = config();
-const envVariable = {
-    BOT_TOKEN: process.env.BOT_TOKEN ?? ""
-};
-if (error || (!parsed && !process.env.BOT_TOKEN)) {
+let { error, parsed } = config();
+const { BOT_TOKEN, PORT, HOST } = process.env;
+if (error) {
     throw Error('Config was not found!');
 }
-const bot = new TextOnVideoBot((!parsed || !parsed['BOT_TOKEN']) ? envVariable : parsed);
+if (!parsed || !Object.keys(parsed).length) {
+    parsed = {
+        BOT_TOKEN: BOT_TOKEN ?? "",
+        PORT: PORT ?? "",
+        HOST: HOST ?? ""
+    }
+}
+const bot = new TextOnVideoBot(parsed);
