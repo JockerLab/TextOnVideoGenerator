@@ -8,7 +8,10 @@ import { config } from 'dotenv';
 // todo: COPY .env в Dockerfile убрать
 
 const { error, parsed } = config();
-if (error || !parsed) {
+const envVariable = {
+    BOT_TOKEN: process.env.BOT_TOKEN ?? ""
+};
+if (error || (!parsed && !process.env.BOT_TOKEN)) {
     throw Error('Config was not found!');
 }
-const bot = new TextOnVideoBot(parsed);
+const bot = new TextOnVideoBot((!parsed || !parsed['BOT_TOKEN']) ? envVariable : parsed);
