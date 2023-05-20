@@ -14,7 +14,8 @@ export class TextOnVideoBot extends TelegramBot {
         super(config['BOT_TOKEN'], { 
             webHook: {
                 host: config['HOST'],
-                port: +config['PORT']
+                port: +config['PORT'],
+                healthEndpoint: "/"
             }
          });
 
