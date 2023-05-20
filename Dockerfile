@@ -14,6 +14,6 @@ RUN apk add --no-cache ffmpeg
 RUN npm install
 RUN npm run build
 
-EXPOSE 81/tcp
+EXPOSE 3000
 
 CMD ["npm", "run", "start"]
