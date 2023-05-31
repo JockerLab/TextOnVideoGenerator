@@ -1,33 +1,32 @@
-import { getHash } from '../utils';
+import { catchErrors, getHash } from '../utils';
 import * as fs from 'fs';
 import { SUFFIX_NAME } from '../constants';
 import { Clip } from '../model/Clip';
 import { VideoDownloader } from '../model/VideoDownloader';
-import { DotenvParseOutput } from 'dotenv';
 import TelegramBot from 'node-telegram-bot-api';
 import FormData from 'form-data';
 import axios from 'axios';
+import { IConfigService } from '../interface/IConfigService';
+import { LRUCache } from '../service/LRUCache';
 
 
 export class TextOnVideoBot extends TelegramBot {
-    constructor(private config: DotenvParseOutput) {
-        super(config['BOT_TOKEN'], { 
-            webHook: {
-                host: config['HOST'],
-                port: +config['PORT'],
-                healthEndpoint: "/"
-            }
-         });
+    // todo: interface cache
+    constructor(private config: IConfigService, private cache: LRUCache) {
+        super(config.get('BOT_TOKEN') ?? '', {
+            polling: true
+        });
 
         this.onText(
-            /\/create_video (\S+) (\d+) (\d+) (".+")/,
+            /^\/create_video (\S+) (\d+) (\d+) (".+")$/,
             this.createVideoCommand.bind(this)
         );
 
-        this.onText(/\/create_video(?!\s*\S+ \d+ \d+ ".+")/, this.usage.bind(this));
+        this.onText(/^\/create_video(?!\s*\S+ \d+ \d+ ".+")$/, this.usage.bind(this));
     }
 
-    private createVideoCommand(msg: TelegramBot.Message, match: RegExpExecArray | null) {
+    @catchErrors
+    private async createVideoCommand(msg: TelegramBot.Message, match: RegExpExecArray | null) {
         if (!match || !match.every((match) => match)) {
             this.usage(msg);
             return;
@@ -48,7 +47,7 @@ export class TextOnVideoBot extends TelegramBot {
             text
         );
 
-        VideoDownloader.download(outputName, link, (videoPath) => 
+        await VideoDownloader.download(this.cache, outputName, link, (videoPath) => 
             this.onDownload(videoPath, msg.chat.id, clip)
         );
     }
@@ -64,7 +63,7 @@ export class TextOnVideoBot extends TelegramBot {
         form.append('video', fs.createReadStream(videoPath));
         
         await axios.post(
-            `https://api.telegram.org/bot${this.config['BOT_TOKEN']}/sendVideo`, 
+            `https://api.telegram.org/bot${this.config.get('BOT_TOKEN')}/sendVideo`, 
             form, 
             { headers: form.getHeaders() }
         );

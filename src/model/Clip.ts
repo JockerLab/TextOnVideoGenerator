@@ -66,7 +66,7 @@ export class Clip {
                     options: {
                         w: width,
                         h: height,
-                        force_original_aspect_ratio: 'disable' // todo: попробовать без этого
+                        force_original_aspect_ratio: 'disable'
                     }
                 },
                 {
@@ -98,7 +98,7 @@ export class Clip {
         return {
             filter: 'drawtext',
             options: {
-                fontfile:'open-sans.ttf',
+                fontfile: 'open-sans.ttf',
                 box: 1,
                 boxborderw: this.border,
                 boxcolor: this.textBackgroundColor,

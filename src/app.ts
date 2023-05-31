@@ -1,22 +1,11 @@
 import { TextOnVideoBot } from './model/TextOnVideoBot';
-import { config } from 'dotenv';
+import { ConfigService } from './service/ConfigService';
+import { LRUCache } from './service/LRUCache';
 
 // Ticket 4. todo: деплой
-// todo: сделать обработку ошибок + валидация
-// todo: добавить LRU кэш на видео
-// todo: скачивать видео не длиннее X секунд.
-// todo: COPY .env в Dockerfile убрать
+// todo: сделать валидацию
+// todo: пофиксить широкий текст?
 
-let { error, parsed } = config();
-const { BOT_TOKEN, PORT, HOST } = process.env;
-if (error) {
-    throw Error('Config was not found!');
-}
-if (!parsed || !Object.keys(parsed).length) {
-    parsed = {
-        BOT_TOKEN: BOT_TOKEN ?? "",
-        PORT: PORT ?? "",
-        HOST: HOST ?? ""
-    }
-}
-const bot = new TextOnVideoBot(parsed);
+const config = new ConfigService();
+const cache = new LRUCache(config);
+const bot = new TextOnVideoBot(config, cache);
