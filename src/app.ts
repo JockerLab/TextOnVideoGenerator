@@ -7,7 +7,7 @@ import { LRUCache } from './service/LRUCache';
 // todo: пофиксить широкий текст?
 
 const config = new ConfigService();
-const cache = new LRUCache(config);
 const server = new Server(config);
 server.init();
+const cache = new LRUCache(config);
 const bot = new TextOnVideoBot(config, cache);

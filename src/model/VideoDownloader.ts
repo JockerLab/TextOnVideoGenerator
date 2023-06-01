@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import ytdl from 'ytdl-core';
-import { OUTPUT_PATH, DOWNLOADED_PATH } from '../constants';
+import { DOWNLOADED_PATH } from '../constants';
 import { BotError } from '../error/BotError';
 import { LRUCache } from '../service/LRUCache';
 
@@ -21,14 +21,6 @@ export class VideoDownloader {
         }
 
         const videoPath = DOWNLOADED_PATH + outputName;
-        
-        if (!fs.existsSync(DOWNLOADED_PATH)){
-            fs.mkdirSync(DOWNLOADED_PATH, { recursive: true });
-        }
-
-        if (!fs.existsSync(OUTPUT_PATH)){
-            fs.mkdirSync(OUTPUT_PATH, { recursive: true });
-        }
 
         if (!cache.has(outputName)) {
             cache.put(outputName);
