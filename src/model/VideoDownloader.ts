@@ -24,7 +24,10 @@ export class VideoDownloader {
 
         if (!cache.has(outputName)) {
             cache.put(outputName);
-            ytdl(link, { quality: 'lowest' })
+            // todo: Тут ошибка, если видеоряда нет, то надо качать в плохом качестве 
+            // ytdl(link, { quality: 'lowest' }).
+            // Надо добавить проверку
+            ytdl(link)
                 .on('end', () => {
                     console.log(`Video ${outputName} downloaded!`);
                     onDownload(videoPath);
