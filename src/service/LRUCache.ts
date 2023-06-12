@@ -1,7 +1,8 @@
+import { ICache } from "../interface/ICache";
 import { IConfigService } from "../interface/IConfigService";
 import * as fs from 'fs';
 
-export class LRUCache {
+export class LRUCache implements ICache {
     private limit: number;
     private stack: string[];
 

@@ -7,7 +7,6 @@ import { LRUCache } from './service/LRUCache';
 // todo: пофиксить широкий текст?
 // todo: добавить метод, очищающий кэш /clear_cache???
 // todo: добавить возможность загружать свои видео
-// todo: -q, -r...
 // todo: video=..., v=... , /shorts/ вместо хэша
 
 const config = new ConfigService();

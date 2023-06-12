@@ -7,13 +7,12 @@ import TelegramBot from 'node-telegram-bot-api';
 import FormData from 'form-data';
 import axios from 'axios';
 import { IConfigService } from '../interface/IConfigService';
-import { LRUCache } from '../service/LRUCache';
 import { VideoParams } from './VideoParams';
+import { ICache } from '../interface/ICache';
 
 
 export class TextOnVideoBot extends TelegramBot {
-    // todo: interface cache
-    constructor(private config: IConfigService, private cache: LRUCache) {
+    constructor(private config: IConfigService, private cache: ICache) {
         super(config.get('BOT_TOKEN') ?? '', {
             polling: true
         });

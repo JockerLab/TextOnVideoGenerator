@@ -1,13 +1,13 @@
 import ytdl from 'ytdl-core';
 import { DOWNLOADED_PATH, TEMPORARY_PATH } from '../constants';
 import { BotError } from '../error/BotError';
-import { LRUCache } from '../service/LRUCache';
 import ffmpeg from 'fluent-ffmpeg';
 import * as fs from 'fs';
+import { ICache } from '../interface/ICache';
 
 export class VideoDownloader {
     static async download(
-        cache: LRUCache, // todo: interface
+        cache: ICache,
         outputName: string,
         link: string,
         quality: string,
