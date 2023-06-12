@@ -1,2 +1,3 @@
-export type Color = 'green' | 'orange' | 'black' | 'white';
-export type VideoExtension = '3gp' | 'aac' | 'flv' | 'm4a' | 'mp3' | 'mp4' | 'ogg' | 'wav' | 'webm';
+export type Color = 'green' | 'orange' | 'white';
+export type VideoExtension = 'mp4' | 'wav' | 'webm';
+export type Quality = 'low' | 'high';

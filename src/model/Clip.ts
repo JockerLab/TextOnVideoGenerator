@@ -2,13 +2,11 @@ import { Color } from "../types";
 import ffmpeg from 'fluent-ffmpeg';
 import { OUTPUT_PATH } from "../constants";
 import { IResolution } from "../interface/IResolution";
+import { VideoParams } from "./VideoParams";
 
 export class Clip {
     private outputName: string;
-    private startTime: number;
-    private duration: number;
-    private textBackgroundColor: Color;
-    private text: string;
+    private videoParams: VideoParams;
     private lineLimit = 30;
     private border: number = 0;
     private fontSize: number = 0;
@@ -17,16 +15,10 @@ export class Clip {
 
     constructor(
         outputName: string,
-        startTime: number,
-        duration: number,
-        textBackgroundColor: Color,
-        text: string
+        videoParams: VideoParams
     ) {
         this.outputName = outputName;
-        this.startTime = startTime;
-        this.duration = duration;
-        this.textBackgroundColor = textBackgroundColor;
-        this.text = text;
+        this.videoParams = videoParams;
     }
 
     private calcScale(width: number, height: number): number {
@@ -49,7 +41,7 @@ export class Clip {
     }
 
     async createClip(videoPath: string, onCreate: (videoPath: string) => void): Promise<void> {    
-        const textLines = this.getTextLines(this.text, this.lineLimit);
+        const textLines = this.getTextLines(this.videoParams.text, this.lineLimit);
 
         let { width, height } = await this.getVideoResolution(videoPath);
         const scale = this.calcScale(width, height);
@@ -58,8 +50,8 @@ export class Clip {
         height = height * scale + textHeight;
 
         ffmpeg(videoPath)
-            .setStartTime(this.startTime)
-            .setDuration(this.duration)
+            .setStartTime(this.videoParams.start_time)
+            .setDuration(this.videoParams.duration)
             .videoFilters([
                 {
                     filter: 'scale',
@@ -101,7 +93,7 @@ export class Clip {
                 fontfile: 'open-sans.ttf',
                 box: 1,
                 boxborderw: this.border,
-                boxcolor: this.textBackgroundColor,
+                boxcolor: this.videoParams.color,
                 text: this.escapeSymbols(line),
                 fontsize: this.fontSize,
                 fontcolor: 'white',

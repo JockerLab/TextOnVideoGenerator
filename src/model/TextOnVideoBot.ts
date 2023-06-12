@@ -8,6 +8,7 @@ import FormData from 'form-data';
 import axios from 'axios';
 import { IConfigService } from '../interface/IConfigService';
 import { LRUCache } from '../service/LRUCache';
+import { VideoParams } from './VideoParams';
 
 
 export class TextOnVideoBot extends TelegramBot {
@@ -17,12 +18,12 @@ export class TextOnVideoBot extends TelegramBot {
             polling: true
         });
 
+        this.onText(/^\/create_video --help$/, this.usage.bind(this));
+
         this.onText(
-            /^\/create_video (\S+) (\d+) (\d+) (".+")$/,
+            /^\/create_video (?!--help).*$/,
             this.createVideoCommand.bind(this)
         );
-
-        this.onText(/^\/create_video(?!\s*\S+ \d+ \d+ ".+")$/, this.usage.bind(this));
     }
 
     @catchErrors
@@ -31,24 +32,36 @@ export class TextOnVideoBot extends TelegramBot {
             this.usage(msg);
             return;
         }
-        const link = match[1];
-        const startTime = +match[2];
-        const duration = +match[3];
-        const text = match[4].slice(1, -1);
-        const videoExtension = 'mp4'; // todo: вынести
-        const textBackgroundColor = 'green'; // todo: вынести
-        const outputName = getHash(link + videoExtension) + '_' + SUFFIX_NAME + videoExtension;
+        const options = match[0].split('--').slice(1).map((option) => option.trim());
+        const params: Record<string, string> = {};
+        for (const option of options) {
+            let [ key, value ] = option.split(/=(.*)/s);
+            if (key === 'text') {
+                value = value.slice(1, -1);
+            }
+            params[key] = value;
+        }
+        const videoParams = new VideoParams(params);
+        console.log(videoParams);
+        const outputName = getHash(
+                videoParams.link + videoParams.extension
+            ) 
+            + '_' 
+            + SUFFIX_NAME 
+            + videoParams.extension;
         
         const clip = new Clip(
             outputName,
-            startTime,
-            duration,
-            textBackgroundColor,
-            text
+            videoParams
         );
 
-        await VideoDownloader.download(this.cache, outputName, link, (videoPath) => 
-            this.onDownload(videoPath, msg.chat.id, clip)
+        await VideoDownloader.download(
+            this.cache,
+            outputName,
+            videoParams.link,
+            videoParams.quality,
+            (videoPath) =>
+                this.onDownload(videoPath, msg.chat.id, clip)
         );
     }
 
@@ -83,10 +96,13 @@ export class TextOnVideoBot extends TelegramBot {
     private usage(msg: TelegramBot.Message) {
         this.sendMessage(
             msg.chat.id,
-            `Use /create_video <link> <start_time> <duration> "<text>".\n
+            `Use /create_video [--link=<link>] [--start_time=<start_time>] [--duration=<duration>] [--quality=<quality>] [--extension=<extension>] [--color=<color>] [--text="<text>"].\n
 <link> — correct video link on youtube;\n
 <start_time> — time from beginning of video in seconds;\n
 <duration> — duration of output video in seconds;\n
+<quality> — low or high;\n
+<extension> — mp4, wav or webm;\n
+<color> — green, orange or white;\n
 <text> — text to display. Note, <text> should be quoted.`
         );
     }

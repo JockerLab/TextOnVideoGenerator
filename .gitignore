@@ -2,6 +2,7 @@
 /dist
 /videos
 /downloaded
+/temp
 package-lock.json
 /.vscode
 .env

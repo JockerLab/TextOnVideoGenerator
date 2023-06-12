@@ -1,7 +1,7 @@
 import express, { Express, Request, Response } from 'express';
 import { IConfigService } from './interface/IConfigService';
 import * as fs from 'fs';
-import { DOWNLOADED_PATH, OUTPUT_PATH } from './constants';
+import { DOWNLOADED_PATH, OUTPUT_PATH, TEMPORARY_PATH } from './constants';
 
 const DEFAULT_PORT = 3000;
 
@@ -22,6 +22,10 @@ export class Server {
         this.app.listen(this.port, () => {
             console.log('Server is running');
         });
+
+        if (!fs.existsSync(TEMPORARY_PATH)){
+            fs.mkdirSync(TEMPORARY_PATH, { recursive: true });
+        }
 
         if (!fs.existsSync(DOWNLOADED_PATH)){
             fs.mkdirSync(DOWNLOADED_PATH, { recursive: true });

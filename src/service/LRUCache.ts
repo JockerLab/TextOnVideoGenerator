@@ -15,7 +15,7 @@ export class LRUCache {
 
     put(fileName: string): void {
         const posInStack = this.stack.findIndex((video) => video === fileName);
-        if (this.stack.length >= this.limit) {
+        if (posInStack === -1 && this.stack.length >= this.limit) {
             const deleted = this.stack.splice(0, 1);
             try {
                 fs.unlinkSync(`./downloaded/${deleted[0]}`);
@@ -23,6 +23,9 @@ export class LRUCache {
             } catch (err) {
                 // ignore
             }
+        }
+        if (posInStack !== -1) {
+            this.stack.splice(posInStack, 1);
         }
         this.stack.push(fileName);
     }
