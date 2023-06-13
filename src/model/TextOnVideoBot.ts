@@ -40,10 +40,10 @@ export class TextOnVideoBot extends TelegramBot {
             }
             params[key] = value;
         }
+        // todo: validate and throw new BotError;
         const videoParams = new VideoParams(params);
-        console.log(videoParams);
         const outputName = getHash(
-                videoParams.link + videoParams.extension
+                videoParams.link + videoParams.extension + videoParams.quality
             ) 
             + '_' 
             + SUFFIX_NAME 
@@ -95,14 +95,7 @@ export class TextOnVideoBot extends TelegramBot {
     private usage(msg: TelegramBot.Message) {
         this.sendMessage(
             msg.chat.id,
-            `Use /create_video [--link=<link>] [--start_time=<start_time>] [--duration=<duration>] [--quality=<quality>] [--extension=<extension>] [--color=<color>] [--text="<text>"].\n
-<link> — correct video link on youtube;\n
-<start_time> — time from beginning of video in seconds;\n
-<duration> — duration of output video in seconds;\n
-<quality> — low or high;\n
-<extension> — mp4, wav or webm;\n
-<color> — green, orange or white;\n
-<text> — text to display. Note, <text> should be quoted.`
+            VideoParams.getUsage()
         );
     }
 }

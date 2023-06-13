@@ -1,7 +1,7 @@
 import { Color } from "../types";
 import ffmpeg from 'fluent-ffmpeg';
 import { OUTPUT_PATH } from "../constants";
-import { IResolution } from "../interface/IResolution";
+import { IInfo } from "../interface/IInfo";
 import { VideoParams } from "./VideoParams";
 
 export class Clip {
@@ -43,15 +43,15 @@ export class Clip {
     async createClip(videoPath: string, onCreate: (videoPath: string) => void): Promise<void> {    
         const textLines = this.getTextLines(this.videoParams.text, this.lineLimit);
 
-        let { width, height } = await this.getVideoResolution(videoPath);
+        let { width, height, duration } = await this.getVideoInfo(videoPath);
         const scale = this.calcScale(width, height);
         const textHeight = this.calcTextHeight(width * scale, textLines);
         width = width * scale;
         height = height * scale + textHeight;
 
         ffmpeg(videoPath)
-            .setStartTime(this.videoParams.start_time)
-            .setDuration(this.videoParams.duration)
+            .setStartTime(this.videoParams.start)
+            .setDuration(Math.min(duration, this.videoParams.duration))
             .videoFilters([
                 {
                     filter: 'scale',
@@ -126,12 +126,13 @@ export class Clip {
         return result;
     }
 
-    private getVideoResolution(videoPath: string): Promise<IResolution> {
+    private getVideoInfo(videoPath: string): Promise<IInfo> {
         return new Promise((resolve, reject) => { 
             ffmpeg.ffprobe(videoPath, (err, metadata) => {
                 resolve({
                     width: (metadata.streams[0].width ?? 0),
-                    height: (metadata.streams[0].height ?? 0)
+                    height: (metadata.streams[0].height ?? 0),
+                    duration: +(metadata.streams[0].duration ?? 0)
                 });
             })
         });
