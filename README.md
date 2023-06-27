@@ -29,5 +29,5 @@ docker run -dp 127.0.0.1:3000:3000 text-on-video-bot
 ```
 ### Todo
 - [ ] Data validation
-- [ ] Fix width of text
+- [x] Fix width of text
 - [ ] Load own video feature
