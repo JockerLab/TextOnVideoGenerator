@@ -47,7 +47,7 @@ export class Clip {
         const scale = this.calcScale(width, height);
         const textHeight = this.calcTextHeight(width * scale, textLines);
         width = width * scale;
-        height = height * scale + textHeight;
+        height = height * scale;
 
         ffmpeg(videoPath)
             .setStartTime(this.videoParams.start)
