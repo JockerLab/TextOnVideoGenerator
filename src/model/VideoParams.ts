@@ -1,4 +1,6 @@
 import { Color, Quality, VideoExtension } from "../types";
+import { VideoParamsSchema } from "../schema";
+import { BotError } from "../error/BotError";
 
 export class VideoParams {
     link: string = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstley';
@@ -10,6 +12,10 @@ export class VideoParams {
     color: Color = 'green';
     
     constructor(params: any) {
+        const { error } = VideoParamsSchema.validate(params);
+        if (error) {
+            throw new BotError(error?.message ?? '');
+        }
         if (params.hasOwnProperty('start')) {
             params.start = +params.start;
         }
@@ -26,7 +32,7 @@ export class VideoParams {
 <duration> — duration of output video in seconds. Max duration by default;\n
 <quality> — low or high. Low by default;\n
 <extension> — mp4, wav or webm. MP4 by default;\n
-<color> — green, orange or white. Green by default;\n
+<color> — green, orange or blue. Green by default;\n
 <text> — text to display. Note, <text> should be quoted.`
     }
 }
